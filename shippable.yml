@@ -36,7 +36,7 @@ build:
 
   # http://docs.shippable.com/ci/shippableyml/#post_ci
   post_ci:
-    - docker build -t $IMAGE_REPO .
+    - docker build -t $IMAGE_REPO:$BRANCH.$BUILD_NUMBER .
     - docker push $AWS_ECR_1_ACCOUNT_URL/$IMAGE_REPO:$BRANCH.$BUILD_NUMBER
     # Push to the second ECR instance by logging in using AWS CLI since AWS only supports one login at a time
     # The AWS secret key used to login is stored in a secure environment variable called aws_secret_access_key
