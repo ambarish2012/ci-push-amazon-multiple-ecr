@@ -16,7 +16,9 @@ env:
     - TESTS_LOC_DIR=$SHIPPABLE_REPO_DIR/tests
     - MOD_LOC=$SHIPPABLE_REPO_DIR/node_modules/.bin/
     - IMAGE_REPO=ci-push-amazon-ecr
-    - AWS_ACCOUNT_URL=432927095699.dkr.ecr.us-east-1.amazonaws.com
+    - AWS_ECR_1_ACCOUNT_URL=679404489841.dkr.ecr.us-east-1.amazonaws.com
+    - AWS_ECR_2_ACCOUNT_URL=679404489841.dkr.ecr.us-west-2.amazonaws.com
+    - secure: Td6sy0DpeeVCCiUezGn6NngTUSVy5LEUd18RE9veKcTZ+H8eFtUJNDhlngi/LaBb2Pw7KKwcah+ArX/izd6V4zrruLEzHIiPJgfNc+OPxE86mGm0S1vmIJ0l4cF3cji6DU5BFzuNt4o3r+D+Rh+acsB6EqUK1vpR8t+C7ytfEhTgPk3Lsv3J1KFZinHavrpZrVbmDV/4Muxx476dVVJRwPzDlS7iOftxkse1DAbEGWF65zg3lyRz8Qh1lgww7SzXMk1QU/01cvxRRwwLLyJICA6lvzrb5/KNSOMeJktNuAJH+7FaVqWfWXbqPZLTvszZhGDbvco/DYiSKUkIHQp1Kw==
 
 build:
 
@@ -34,9 +36,18 @@ build:
 
   # http://docs.shippable.com/ci/shippableyml/#post_ci
   post_ci:
-    - docker build -t $AWS_ACCOUNT_URL/$IMAGE_REPO:$BRANCH.$BUILD_NUMBER .
-    - docker push $AWS_ACCOUNT_URL/$IMAGE_REPO:$BRANCH.$BUILD_NUMBER
-
+    - docker build -t $IMAGE_REPO .
+    - docker push $AWS_ECR_1_ACCOUNT_URL/$IMAGE_REPO:$BRANCH.$BUILD_NUMBER
+    # Push to the second ECR instance by logging in using AWS CLI since AWS only supports one login at a time
+    # The AWS secret key used to login is stored in a secure environment variable called aws_secret_access_key
+    # and specified in the env:global:secure section above.
+    - aws configure set aws_access_key_id AKIAI2DOOWHRO3L2VEMA
+    - aws configure set aws_secret_access_key $aws_secret_access_key
+    - aws configure set region us-west-2
+    - docker_login_cmd=$(aws ecr get-login)
+    - $($docker_login_cmd)
+    - docker push $AWS_ECR_2_ACCOUNT_URL/$IMAGE_REPO:$BRANCH.$BUILD_NUMBER
+    
 # Integrations are used to connect external resources to CI
 # http://docs.shippable.com/integrations/overview/
 integrations:
@@ -44,4 +55,4 @@ integrations:
   # http://docs.shippable.com/ci/push-amazon-ecr/
   hub:
     - integrationName: ecr-integration
-      type: ecr
+      type: dr-ecr
