@@ -48,7 +48,7 @@ build:
     - echo $aws_secret_access_key
     - docker_login_cmd=$(aws ecr get-login)
     - echo $docker_login_cmd
-    - $($docker_login_cmd)
+    - $docker_login_cmd
     - docker tag $IMAGE_REPO:$BRANCH.$BUILD_NUMBER $AWS_ECR_2_ACCOUNT_URL/$IMAGE_REPO:$BRANCH.$BUILD_NUMBER
     - docker push $AWS_ECR_2_ACCOUNT_URL/$IMAGE_REPO:$BRANCH.$BUILD_NUMBER
     
